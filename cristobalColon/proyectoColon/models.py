@@ -22,7 +22,7 @@ class Habilidad(models.Model):
     nombre = models.CharField(max_length=50)
 
     class Meta:
-        verbose_name: "Habilidad"
+        verbose_name = "Habilidad"
         verbose_name_plural = "Habilidades"
 
     def __str__(self):

@@ -70,3 +70,95 @@ def consultar_usuario(request, id):
         'tipo': usuario.tipo,
     }
     return JsonResponse(datos, safe=False)
+
+@csrf_exempt
+def modificar_usuario(request, id):
+    if request.method not in ("PUT", "PATCH"):
+        return JsonResponse(
+            {"error": "Tipo de petición no es correcta"},
+            status=405,
+        )
+
+    try:
+        usuario = Usuario.objects.get(id=id)
+    except Usuario.DoesNotExist:
+        return JsonResponse(
+            {"error": "Usuario no encontrado"},
+            status=404,
+        )
+
+    try:
+        usuario_json = json.loads(request.body)
+    except JSONDecodeError:
+        return JsonResponse(
+            {"error": "El JSON no está bien formado"},
+            status=400,
+        )
+
+    if "tipo" in usuario_json:
+        msg_error = validacion(usuario_json.get("tipo"))
+        if msg_error != "":
+            return JsonResponse({"error": msg_error}, status=400)
+        usuario.tipo = usuario_json.get("tipo")
+
+    if "nombre" in usuario_json:
+        if not usuario_json.get("nombre"):
+            return JsonResponse(
+                {"error": "El nombre no puede estar vacío"},
+                status=400,
+            )
+        usuario.nombre = usuario_json.get("nombre")
+
+    if "apellidos" in usuario_json:
+        if not usuario_json.get("apellidos"):
+            return JsonResponse(
+                {"error": "Los apellidos no pueden estar vacíos"},
+                status=400,
+            )
+        usuario.apellidos = usuario_json.get("apellidos")
+
+    usuario.save()
+
+    if "habilidad" in usuario_json:
+        habilidades = usuario_json.get("habilidad")
+        if not isinstance(habilidades, list):
+            return JsonResponse(
+                {"error": "El campo 'habilidad' debe ser una lista"},
+                status=400,
+            )
+        usuario.habilidad.clear()
+        crear_habilidades(habilidades, usuario)
+
+    return JsonResponse(
+        {
+            "exito": "Usuario modificado correctamente",
+            "id": usuario.id,
+        },
+        status=200,
+    )
+
+@csrf_exempt
+def eliminar_usuario(request, id):
+    if request.method != "DELETE":
+        return JsonResponse(
+            {"error": "Tipo de petición no es correcta"},
+            status=405,
+        )
+
+    try:
+        usuario = Usuario.objects.get(id=id)
+    except Usuario.DoesNotExist:
+        return JsonResponse(
+            {"error": "Usuario no encontrado"},
+            status=404,
+        )
+
+    usuario.delete()
+
+    return JsonResponse(
+        {
+            "exito": "Usuario eliminado correctamente",
+            "id": id,
+        },
+        status=200,
+    )
