@@ -28,9 +28,7 @@ def crear_usuario(request):
          tipo=usuario_json.get('tipo')
      )
      usuario.save()
-     #Habilidades
      # si en el usuario vienen habilidades que no existen las creamos
-     usuario.save()
      habilidades = usuario_json.get('habilidad', [])
      crear_habilidades(habilidades, usuario)
      return JsonResponse({
@@ -49,7 +47,6 @@ def validacion (tipo):
 
 
 def crear_habilidades(habilidades,objeto):
-
     for habilidad in habilidades:
         habilidad_model,creada = Habilidad.objects.get_or_create(nombre=habilidad)
         #una vez creada la habilidad, se asocia al usuario
@@ -58,3 +55,18 @@ def crear_habilidades(habilidades,objeto):
         print("Etiqueta ya creada")
     else:
         print("Etiqueta nueva")
+
+
+def consultar_usuario(request, id):
+    if request.method != "GET":
+        return JsonResponse(
+            {"error": "Esta petición solo funciona con get"},
+            status=405
+        )
+    usuario = Usuario.objects.get(id=id)
+    datos = {
+        'nombre': usuario.nombre,
+        'apellidos': usuario.apellidos,
+        'tipo': usuario.tipo,
+    }
+    return JsonResponse(datos, safe=False)
