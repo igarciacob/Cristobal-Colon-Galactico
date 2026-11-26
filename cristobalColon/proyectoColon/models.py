@@ -16,17 +16,6 @@ class Nave(models.Model):
     tipo = models.ForeignKey(Tipo, on_delete=models.CASCADE)
 
 
-class Mision(models.Model):
-    nombre = models.CharField(max_length=100)
-    fecha_inicio = models.DateField()
-    fecha_fin = models.DateField()
-    exito = models.BooleanField()
-    id_nave = models.ForeignKey(Nave, on_delete=models.CASCADE)
-
-
-class Exoplaneta(models.Model):
-    nombre = models.CharField(max_length=100)
-    id_mision = models.ForeignKey(Mision, on_delete=models.CASCADE)
 
 #Habilidades
 class Habilidad(models.Model):
@@ -44,7 +33,6 @@ class Usuario (models.Model):
     apellidos = models.CharField (max_length = 100)
     tipo = models.CharField(max_length=25)
     habilidad = models.ManyToManyField (Habilidad, blank=True)
-    mision = models.ManyToManyField(Mision, blank=True)
 
     class Meta:
         constraints = [ models.CheckConstraint(
@@ -56,3 +44,15 @@ class Usuario (models.Model):
     def __str__(self):
         return f"{self.id} {self.nombre} {self.apellidos}"
 
+
+class Mision(models.Model):
+    nombre = models.CharField(max_length=100)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    exito = models.BooleanField()
+    id_nave = models.ForeignKey(Nave, on_delete=models.CASCADE)
+    usuarios= models.ManyToManyField(Usuario, blank=True)
+
+class Exoplaneta(models.Model):
+    nombre = models.CharField(max_length=100)
+    id_mision = models.ForeignKey(Mision, on_delete=models.CASCADE)
