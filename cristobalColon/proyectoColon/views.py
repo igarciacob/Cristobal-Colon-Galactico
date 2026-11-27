@@ -257,3 +257,26 @@ def asignar_mision(request):
     },
     status=201)
 
+# Consultar los tripulantes de una misión
+def consultar_tripulacion(request,id):
+    if request.method != "GET":
+        return JsonResponse({"error": "Esta petición solo funciona con get"}, status=405)
+    try:
+        mision = Mision.objects.get(id=id)
+    except Mision.DoesNotExist:
+        return JsonResponse({"error": "Misión no encontrada"}, status=404)
+    tripulacion = []
+# recogemos los usuarios de la tripulacion
+    for usuario in mision.usuarios.all():
+        tripulacion.append({
+            "id": usuario.id,
+            "nombre": usuario.nombre,
+            "apellidos": usuario.apellidos,
+            "tipo": usuario.tipo,
+            "habilidad": list(usuario.habilidad.values())
+        })
+    return JsonResponse({
+        "id": mision.id,
+        "nombre": mision.nombre,
+        "tripulacion": tripulacion
+    })
