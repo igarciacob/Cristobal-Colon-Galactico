@@ -4,8 +4,9 @@ from json import JSONDecodeError
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+from datetime import date
 
-from .models import Usuario, Habilidad, Nave, Tipo, Mision
+from .models import Usuario, Habilidad, Nave, Tipo, Mision, Exoplaneta
 
 
 
@@ -280,3 +281,80 @@ def consultar_tripulacion(request,id):
         "nombre": mision.nombre,
         "tripulacion": tripulacion
     })
+
+@csrf_exempt
+def finalizar_mision(request, id):
+    if request.method != "POST":
+        return JsonResponse(
+            {"error": "Tipo de petición no es correcta"},
+            status=405,
+        )
+
+    try:
+        mision = Mision.objects.get(id=id)
+    except Mision.DoesNotExist:
+        return JsonResponse(
+            {"error": "Misión no encontrada"},
+            status=404,
+        )
+
+    try:
+        mision_json = json.loads(request.body)
+    except JSONDecodeError:
+        return JsonResponse(
+            {"error": "El JSON no está bien formado"},
+            status=400,
+        )
+
+    if "exito" not in mision_json or not isinstance(mision_json.get("exito"), bool):
+        return JsonResponse(
+            {"error": "El campo 'exito' es obligatorio y debe ser true o false"},
+            status=400,
+        )
+
+    exito = mision_json.get("exito")
+
+    if "fecha_fin" in mision_json and mision_json.get("fecha_fin"):
+        fecha_fin = mision_json.get("fecha_fin")
+    else:
+        fecha_fin = date.today()
+
+    mision.exito = exito
+    mision.fecha_fin = fecha_fin
+    mision.save()
+
+    exoplanetas_creados = []
+    if exito is True and "exoplanetas" in mision_json:
+        exoplanetas = mision_json.get("exoplanetas")
+        if not isinstance(exoplanetas, list):
+            return JsonResponse(
+                {"error": "El campo 'exoplanetas' debe ser una lista"},
+                status=400,
+            )
+
+        for exo in exoplanetas:
+            if isinstance(exo, dict):
+                nombre_exo = exo.get("nombre")
+            else:
+                nombre_exo = exo
+
+            if nombre_exo:
+                nuevo_exo = Exoplaneta.objects.create(
+                    nombre=nombre_exo,
+                    id_mision=mision,
+                )
+                exoplanetas_creados.append({
+                    "id": nuevo_exo.id,
+                    "nombre": nuevo_exo.nombre,
+                })
+
+    return JsonResponse(
+        {
+            "exito": "Misión finalizada correctamente",
+            "id": mision.id,
+            "resultado": mision.exito,
+            "fecha_fin": str(mision.fecha_fin),
+            "exoplanetas": exoplanetas_creados,
+        },
+        status=200,
+    )
