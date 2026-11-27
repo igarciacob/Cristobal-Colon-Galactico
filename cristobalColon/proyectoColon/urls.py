@@ -11,4 +11,5 @@ urlpatterns = [
     path('asignarmision/', views.asignar_mision, name='asignarMision'),
     path('consultartripulacion/<int:id>/', views.consultar_tripulacion, name='tripulacion'),
     path("finalizarmisiones/<int:id>/", views.finalizar_mision),
+    path("consultarplanetascapitan/<int:id>/", views.consultar_planetas_capitan, name="consultar_planetas_capitan"),
 ]
