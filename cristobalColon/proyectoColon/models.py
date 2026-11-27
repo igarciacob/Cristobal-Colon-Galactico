@@ -10,14 +10,19 @@ class Tipo(models.Model):
     capacidad_min = models.IntegerField()
     capacidad_max = models.IntegerField()
 
+    def __str__(self):
+        return f"{self.id} - {self.nombre}"
+
 
 class Nave(models.Model):
     nombre = models.CharField(max_length=100)
     tipo = models.ForeignKey(Tipo, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.id} - {self.nombre} ({self.tipo.nombre})"
 
 
-#Habilidades
+# Habilidades
 class Habilidad(models.Model):
     nombre = models.CharField(max_length=50)
 
@@ -27,19 +32,20 @@ class Habilidad(models.Model):
 
     def __str__(self):
         return f"{self.id} {self.nombre}"
-#Usuarios
-class Usuario (models.Model):
-    nombre = models.CharField (max_length = 100)
-    apellidos = models.CharField (max_length = 100)
+
+
+# Usuarios
+class Usuario(models.Model):
+    nombre = models.CharField(max_length=100)
+    apellidos = models.CharField(max_length=100)
     tipo = models.CharField(max_length=25)
-    habilidad = models.ManyToManyField (Habilidad, blank=True)
+    habilidad = models.ManyToManyField(Habilidad, blank=True)
 
     class Meta:
-        constraints = [ models.CheckConstraint(
-                condition=Q(tipo__in=['tripulante', 'capitan']),
-                name='tipo_valido'
-            ),]
-
+        constraints = [models.CheckConstraint(
+            condition=Q(tipo__in=['tripulante', 'capitan']),
+            name='tipo_valido'
+        ), ]
 
     def __str__(self):
         return f"{self.id} {self.nombre} {self.apellidos}"
@@ -47,12 +53,19 @@ class Usuario (models.Model):
 
 class Mision(models.Model):
     nombre = models.CharField(max_length=100)
-    fecha_inicio = models.DateField()
-    fecha_fin = models.DateField()
-    exito = models.BooleanField()
+    fecha_inicio = models.DateField(blank=True, null=True)
+    fecha_fin = models.DateField(blank=True, null=True)
+    exito = models.BooleanField(blank=True, null=True)
     id_nave = models.ForeignKey(Nave, on_delete=models.CASCADE)
-    usuarios= models.ManyToManyField(Usuario, blank=True)
+    usuarios = models.ManyToManyField(Usuario, blank=True)
+
+    def __str__(self):
+        return f"{self.id} - {self.nombre}"
+
 
 class Exoplaneta(models.Model):
     nombre = models.CharField(max_length=100)
     id_mision = models.ForeignKey(Mision, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.id} - {self.nombre}"
