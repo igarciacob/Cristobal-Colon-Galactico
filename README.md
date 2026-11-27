@@ -9,11 +9,12 @@
 * Asignar una misión
     Se crea una misión con unas fechas determinadas y se asignan tanto la nave como la tripulaciín de manera aleatoria teneinedo en cuenta el tamaño de la nave y las fechas de la misión
 * Finalizar una misión
-
+    Permite cerrar una misión indicando si ha tenido éxito o ha fracasado y registrando los exoplanetas descubiertos en caso de éxito
 * Consultar los tripulantes de una misión
     Dada una misión conocida, se obtiene los tripulantes que han participado y sus habilidades
 
 * Consultar los planetas descubiertos por un capitán
+    Permite consultar todos los exoplanetas descubiertos en las misiones en las que ha participado un capitán concreto
 
 ## Tecnologías utilizadas
 * Lenguaje / Framework principal (ej. Python, React, Node.js)
@@ -67,13 +68,19 @@ Este comando generará automáticamente el archivo `db.sqlite3` con las tablas n
 python manage.py migrate
 ```
 
-### 7. *(Opcional)* Crear un superusuario
+### 7. Poblar datos de prueba *(opcional)*
+Para generar datos iniciales (capitanes, tripulantes, naves, misiones y exoplanetas):
+```bash
+python manage.py factoria
+```
+
+### 8. *(Opcional)* Crear un superusuario
 Para acceder al panel de administración de Django (`/admin`):
 ```bash
 python manage.py createsuperuser
 ```
 
-### 8. Ejecutar el servidor
+### 9. Ejecutar el servidor
 ```bash
 python manage.py runserver
 ```
@@ -82,7 +89,10 @@ La API estará disponible en `http://127.0.0`.
 
 ## Documentación de la API
 
-La URL base para todas las peticiones en entorno local es: `http://127.0.0`
+La URL base para todas las peticiones en entorno local es: `http://127.0.0` (o con el prefijo `/api/` según la configuración de `urls.py`).
+
+### Validaciones y respuestas de error
+Las validaciones de datos comprueban los campos de entrada y acumulan los fallos encontrados para devolverlos en una lista `"errores"` con código `400` cuando hay varios errores de validación a la vez, facilitando corregirlos de una pasada.
 
 ### Endpoints disponibles
 
@@ -95,12 +105,14 @@ La URL base para todas las peticiones en entorno local es: `http://127.0.0`
 | `PUT` / `PATCH` | `/usuarios/{id}/modificar/` | Actualiza la información de un usuario existente | `id` (entero) |
 | `DELETE` | `/usuarios/{id}/eliminar/` | Elimina un usuario del sistema | `id` (entero) |
 
-#### Misiones y Tripulación
+#### Misiones, Tripulación y Exoplanetas
 
 | Método | Endpoint | Descripción | Parámetros de ruta |
 | :--- | :--- | :--- | :--- |
 | `POST` | `/asignarmision/` | Asigna una misión a un usuario o tripulación | — |
 | `GET` | `/consultartripulacion/{id}/` | Consulta los detalles de una tripulación específica | `id` (entero) |
+| `POST` | `/finalizarmision/{id}/` | Finaliza una misión indicando éxito o fracaso y registra exoplanetas si hubo éxito | `id` (entero) |
+| `GET` | `/consultarplanetascapitan/{id}/` | Consulta los exoplanetas descubiertos en las misiones de un capitán | `id` (entero) |
 
 ---
 
@@ -159,6 +171,56 @@ La URL base para todas las peticiones en entorno local es: `http://127.0.0`
 }
 ```
 
+#### 4. Finalizar una misión (`POST /finalizarmision/1/`)
+
+**Cuerpo de la petición (JSON):**
+```json
+{
+    "exito": true,
+    "fecha_fin": "2026-11-27",
+    "exoplanetas": ["Kepler-452b", "Gliese 667 Cc"]
+}
+```
+
+**Respuesta exitosa (`200`):**
+```json
+{
+    "exito": "Misión finalizada correctamente",
+    "id": 1,
+    "resultado": true,
+    "fecha_fin": "2026-11-27",
+    "exoplanetas": [
+        {
+            "id": 1,
+            "nombre": "Kepler-452b"
+        },
+        {
+            "id": 2,
+            "nombre": "Gliese 667 Cc"
+        }
+    ]
+}
+```
+
+#### 5. Consultar los planetas descubiertos por un capitán (`GET /consultarplanetascapitan/1/`)
+
+**Respuesta exitosa (`200`):**
+```json
+{
+    "capitan_id": 1,
+    "nombre": "Vasco",
+    "apellidos": "Nuñez de Balboa",
+    "exoplanetas": [
+        {
+            "id": 1,
+            "nombre": "Kepler-452b",
+            "mision_id": 1,
+            "mision_nombre": "Exploración espacial"
+        }
+    ]
+}
+```
+
 ## Pruebas
 
 El proyecto incluye pruebas automatizadas para verificar el correcto funcionamiento de los endpoints y la lógica de negocio.
@@ -175,5 +237,3 @@ Asegúrate de tener el entorno virtual activado y ejecuta el siguiente comando d
 ```bash
 python manage.py test
 ```
-
-
